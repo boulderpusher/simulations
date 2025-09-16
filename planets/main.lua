@@ -1,10 +1,11 @@
 function love.load()
 	G = 1
+	trailLength = 20
 
 	bodies = {
-		{xPos = 200, yPos = 200, xVel = 100, yVel = 0, size = 10, mass = 1, color = {0, 1, 0}},
-		{xPos = 300, yPos = 200, xVel = 0, yVel = -100, size = 10, mass = 1, color = {0, 0, 1}},
-		{xPos = 250, yPos = 300, xVel = -60, yVel = -60, size = 10, mass = 1, color = {1, 0, 0}}
+		{xPos = 200, yPos = 200, xVel = 100, yVel = 50, size = 10, mass = 1, color = {0, 1, 0}, trail={}},
+		{xPos = 300, yPos = 200, xVel = 0, yVel = -100, size = 10, mass = 1, color = {0, 0, 1}, trail={}},
+		{xPos = 250, yPos = 300, xVel = -60, yVel = -60, size = 10, mass = 1, color = {1, 0, 0}, trail={}}
 	}
 end
 
@@ -20,16 +21,33 @@ function love.update(dt)
 		end
 	end
 
-	for i = 1, #bodies do
-		applyVelocity(bodies[i], dt)
+	for i, body in ipairs(bodies) do
+		applyVelocity(body, dt)
+		trackPosition(body)
 	end
 end
 
 function love.draw()
-	for i = 1, #bodies do
-		body = bodies[i]
-		love.graphics.setColor(body.color)
-		love.graphics.circle("fill", body.xPos, body.yPos, body.size)
+	for _, body in ipairs(bodies) do
+		drawBody(body)
+		drawTrail(body)
+	end
+end
+
+function drawBody(body)
+	love.graphics.setColor(body.color)
+	love.graphics.circle("fill", body.xPos, body.yPos, body.size)
+end
+
+function drawTrail(body)
+	local color = {}
+	for i, v in ipairs(body.color) do
+		table.insert(color, v)
+	end
+	for i, pos in ipairs(body.trail) do
+		color[4] = i * (1 / #body.trail)
+		love.graphics.setColor(color)
+		love.graphics.circle("fill", pos[1], pos[2], i * body.size / #body.trail)
 	end
 end
 
@@ -54,4 +72,12 @@ function applyVelocity(body, dt)
 	body.xPos = body.xPos + body.xVel * dt
 	body.yPos = body.yPos + body.yVel * dt
 end
+
+function trackPosition(body)
+	if #body.trail >= trailLength then
+		table.remove(body.trail, 1)
+	end
+	table.insert(body.trail, {body.xPos, body.yPos})
+end
+
 
